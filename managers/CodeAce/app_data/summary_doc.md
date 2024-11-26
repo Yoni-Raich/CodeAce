@@ -1,50 +1,28 @@
 ### Project Summary: CodeAce File Manager
 
-The CodeAce File Manager is an essential component of the CodeAce project, aimed at streamlining the management of source code and associated documentation. This tool is particularly beneficial for developers, managers, and stakeholders who need to efficiently handle large codebases and maintain structured documentation.
+The CodeAce File Manager is a core component of the CodeAce project, designed for efficient management of source code and associated documentation. It's a valuable tool for developers, managers, and stakeholders working with large codebases, providing easy access, comprehensive documentation, and streamlined maintenance.
 
 #### Purpose
 
-The primary purpose of the CodeAce File Manager is to facilitate the organization and management of code files within a specified directory. It ensures that source files are easily accessible, properly documented, and well-maintained, thereby improving productivity and maintaining a high standard of code quality.
+The primary goal is to organize and manage code files within a specified directory, boosting developer productivity and maintaining high code quality through improved accessibility and documentation.  The system also leverages Large Language Models (LLMs) to enhance code analysis and generate improved documentation summaries.
 
 #### Functionality
 
-The CodeAce File Manager offers several key functionalities:
+The File Manager offers these key features:
 
-1. **Initialization**: When initialized, it verifies the existence of the source path and sets up the necessary directories and files for data storage.
-2. **Directory Scanning**: It recursively scans the specified source directory to identify and list all code files, excluding common directories like `.git`, `__pycache__`, `node_modules`, `venv`, and `.env`.
-3. **File Reading**: It provides the capability to read the content of any given file within the directory, ensuring the file is not empty and handling potential errors gracefully.
-4. **Mapping Management**: The tool maintains a JSON file that maps and stores metadata about the code files. It allows adding new mappings or updating existing ones, ensuring the data is always current.
-5. **Documentation**: It supports saving and reading summaries of the code files in a structured markdown document, which is essential for maintaining comprehensive documentation of the codebase.
+1. **Initialization:** Sets up the necessary directories and files for data storage after verifying the source code path.
+2. **Directory Scanning:** Recursively scans the specified source directory, identifying all relevant code files while excluding common directories (e.g., `.git`, `__pycache__`, `node_modules`, `venv`, `.env`).  It supports multiple code file extensions (`.py`, `.js`, `.ts`, `.java`, `.cpp`, `.cs`, `.rb`, `.go`).
+3. **File Reading:** Reads the content of each file in the scanned directory, handling empty files and potential errors.
+4. **Mapping Management:** Maintains a JSON file storing metadata about each code file, allowing for adding and updating this metadata.  This metadata includes a detailed description of the file's purpose and a list of its implemented functions, generated using LLM analysis.
+5. **Documentation:** Supports saving and reading code file summaries in a markdown document, providing comprehensive codebase documentation.  The summaries are generated and updated using LLM-powered analysis and professional technical writing prompts.
+6. **LLM Integration:** Integrates with various Language Model (LLM) providers (OpenAI, Anthropic, Azure OpenAI, Ollama, and Google Gemini via LangChain) to enhance code analysis and documentation.  This integration leverages the `LLMManager` and `PromptManager` components for managing LLM interactions and prompt templates respectively.  The system supports configuration through environment variables or direct parameter passing for API keys and other settings.  The `PromptManager` utilizes custom prompt templates for code analysis and summary generation, ensuring high-quality and consistent output.  These templates are designed to elicit detailed descriptions and function lists from the LLM, and to generate natural language summaries suitable for various stakeholders.
+
 
 #### Structure
 
-The `FileManager` class is the core of the CodeAce File Manager, encapsulating all the primary functionalities. It is structured to handle initialization, directory scanning, file reading, and data management seamlessly. Key methods include:
-- `_initialize_main_json`: Ensures the main JSON file is set up.
-- `_create_app_data_dir`: Creates necessary directories for storing application data.
-- `scan_directory`: Scans and lists all relevant code files.
-- `read_file`: Reads and returns the content of a specified file.
-- `save_mapping`: Manages the code file mappings in the JSON file.
-- `save_summary`: Saves summaries of code files to a markdown document.
-- `read_summary`: Reads and returns the content of the summary document.
+The `FileManager` class forms the core, handling initialization, directory scanning, file reading, and data management.  It manages the JSON file of code mappings and the markdown summary document.  The `LLMManager` handles interactions with different LLM providers using LangChain, abstracting away the provider-specific details.  The `PromptManager` manages prompt templates for code analysis and summary updates, working in conjunction with the selected LLM.  The `PromptManager` uses a structured approach, defining specific prompt templates for different tasks (e.g., code file analysis, summary updates) and utilizing appropriate output parsers to ensure data consistency and quality.
 
-#### New Components: LLMManager and PromptManager
 
-In addition to the core functionalities, the project now includes two additional components: `LLMManager` and `PromptManager`. These components extend the capabilities of CodeAce by integrating advanced language models for enhanced code analysis and processing.
+#### Overall
 
-##### LLMManager
-
-The `LLMManager` is designed to manage various Language Model (LLM) providers using the LangChain framework. It supports multiple LLM providers, including OpenAI, Anthropic, Azure OpenAI, Ollama, and Google Gemini. The `LLMManager` handles the initialization and management of these language models, allowing users to leverage their advanced capabilities for code analysis.
-
-Key functionalities of the `LLMManager` include:
-- **Model Initialization**: It initializes models from different providers, ensuring the correct API keys and parameters are used.
-- **Provider Support**: It supports various providers, such as OpenAI, Anthropic, Azure OpenAI, Ollama, and Google Gemini, enabling a wide range of language model functionalities.
-
-##### PromptManager
-
-The `PromptManager` handles different prompt templates for code analysis and summary updates. It integrates with language models to process and analyze code files and update project summaries seamlessly.
-
-Key functionalities of the `PromptManager` include:
-- **Create Mapping Chain**: This method creates a mapping chain by combining a prompt template, LLM, and a parser. It uses a JSON parser with a schema for code file analysis, defining prompts for detailed code file descriptions and function extraction.
-- **Create Summary Update Chain**: This method creates a summary update chain by combining a prompt template, LLM, and a string output parser. It defines a prompt template for maintaining and updating comprehensive project summaries in natural language.
-
-Overall, the CodeAce File Manager, now enhanced with the LLMManager and PromptManager, is designed to be a robust and user-friendly tool that significantly enhances the efficiency of managing and documenting codebases. This makes it an invaluable asset for any development team looking to maintain a structured and well-documented code environment while leveraging advanced language models for added functionality.
+The CodeAce File Manager, enhanced with LLM integration, offers a robust and user-friendly solution for managing and documenting codebases. It leverages the power of advanced language models to increase efficiency and improve the overall development process.  The system is designed to be flexible and configurable, allowing users to select their preferred LLM provider and customize settings as needed. The integration of the `PromptManager` significantly enhances the quality and consistency of the generated documentation, providing valuable insights into the codebase for all stakeholders.

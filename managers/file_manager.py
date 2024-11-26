@@ -91,6 +91,19 @@ class FileManager:
         except IOError as e:
             raise IOError(f"Error updating mapping file at {self.main_json_path}: {str(e)}")
 
+    def get_mapped_files(self) -> List[str]:
+        """
+        Get list of mapped files from main JSON file
+        """
+        try:
+            with open(self.main_json_path, 'r', encoding='utf-8') as f:
+                mappings = json.load(f)
+                return [m['file_name'] for m in mappings]
+        except FileNotFoundError:
+            return []
+        except IOError as e:
+            raise IOError(f"Error reading mapping file at {self.main_json_path}: {str(e)}")
+
     def save_summary(self, summary: str) -> None:
         """
         Save summary to a markdown file
