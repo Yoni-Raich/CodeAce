@@ -18,6 +18,11 @@ class LLMManager:
             "ollama": self._get_ollama_llm,
             "gemini": self._get_gemini_llm,
         }
+
+    def create_model_instance_by_name(self, model_name: str):
+        if model_name not in self.supported_llms:
+            raise ValueError(f"Model {model_name} is not supported.")
+        return self.supported_llms[model_name]()    
     
     def _initialize_api_key(self, provider: str, api_key: Optional[str] = None) -> str:
         """Initialize API key for a provider."""

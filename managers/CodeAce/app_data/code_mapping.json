@@ -1,0 +1,17 @@
+[
+  {
+    "file_name": "C:\\CodeAce\\managers\\file_manager.py",
+    "description": "The FileManager class is responsible for managing files and directories within a specified source path and application data path. It includes functionality for initializing necessary directories and files, scanning directories to list code files based on specific extensions, reading file content, saving and updating JSON mappings of file information, and handling summaries in markdown format. The class ensures proper handling of file and directory creation, existence checks, and error management during file operations.",
+    "functions": "__init__,_initialize_main_json,_create_app_data_dir,scan_directory,read_file,save_mapping,save_summary,read_summary"
+  },
+  {
+    "file_name": "C:\\CodeAce\\managers\\llm_manager.py",
+    "description": "This Python file defines a class called LLMManager responsible for managing interactions with different Large Language Model (LLM) providers through the LangChain library. The class supports various LLM providers, including OpenAI, Anthropic, Azure OpenAI, Ollama, and Google Gemini. It includes methods for initializing API keys, creating instances of each LLM provider, and handling specific configurations and parameters required for each provider.",
+    "functions": "__init__, create_model_instance_by_name, _initialize_api_key, _get_openai_llm, _get_anthropic_llm, _get_azure_openai_llm, _get_ollama_llm, _get_gemini_llm"
+  },
+  {
+    "file_name": "C:\\CodeAce\\managers\\prompt_manager.py",
+    "description": "This file defines a `PromptManager` class responsible for handling different prompt templates used for code analysis and summary updates by leveraging the LangChain framework. It includes methods to create runnable sequences that combine prompt templates, language models (LLMs), and output parsers to generate detailed code file descriptions and maintain comprehensive project summaries.",
+    "functions": "create_mapping_chain,create_summery_update_chain"
+  }
+]
