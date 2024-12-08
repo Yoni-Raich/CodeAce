@@ -92,6 +92,43 @@ class TokenManager:
         prompt_tokens = self.calculate_tokens(prompt)
         return prompt_tokens <= self.max_tokens
 
+    def get_possible_files_content(self, user_query: str, file_paths: list) -> Tuple[str, list]:
+        """
+        Select and concatenate file contents based on token constraints.
+
+        Args:
+            user_query (str): The user's query
+            file_paths (list): List of file paths to process
+
+        Returns:
+            Tuple[str, list]: Concatenated content of selected files and remaining file paths
+        """
+        user_query_tokens = self.calculate_tokens(f"{user_query}")
+        remaining_tokens = self.max_tokens - user_query_tokens
+
+        added_tokens = 0
+        selected_content = []
+        remaining_files = file_paths.copy()
+        
+        for file_path in file_paths:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    file_content = f"File: {file_path}\n{f.read()}\n---\n"
+                    content_tokens = self.calculate_tokens(file_content)
+                    
+                    if added_tokens + content_tokens <= remaining_tokens:
+                        selected_content.append(file_content)
+                        remaining_files.pop(0)
+                        added_tokens += content_tokens
+                    else:
+                        break
+            except Exception as e:
+                print(f"Error reading file {file_path}: {str(e)}")
+                remaining_files.pop(0)
+                continue
+                
+        return '\n'.join(selected_content), remaining_files
+
 
 # Example Usage
 if __name__ == "__main__":

@@ -121,6 +121,58 @@ class PromptManager:
         # Combine the components: prompt template, LLM, and parser
         return search_prompt | llm | parser
 
+    def create_code_query_chain(self, llm) -> RunnableSequence:
+        """Creates a chain for answering queries based on code content"""
+        prompt_template = PromptTemplate(
+            template=self._get_code_query_prompt_template(),
+            input_variables=["code_content", "user_query", "previous_response_context", "continuation_context", "response_type"]
+        )
+        
+        return prompt_template | llm | StrOutputParser()
+
+    def _get_code_query_prompt_template(self) -> str:
+        """Returns the template for code query prompts"""
+        return """You are an expert software developer and code analyst. Your task is to answer the user's question based on the provided code files.
+        
+        Guidelines:
+        1. Analyze the code thoroughly to provide accurate answers
+        2. Reference specific parts of the code when relevant
+        3. If the answer requires code examples, provide them
+        4. If you're unsure about something, acknowledge the uncertainty
+        5. Focus on the specific files and code provided
+        6. If this is a continuation of a previous response, build upon it without repeating information
+        
+        {previous_response_context}
+        
+        Code Files Content:
+        {code_content}
+        
+        User Question: {user_query}
+        
+        {continuation_context}
+        
+        Please provide a{response_type} answer based on the code above:"""
+
+    def prepare_query_context(self, previous_response: str, has_remaining_files: bool) -> Dict[str, str]:
+        """Prepares context information for the code query"""
+        previous_response_context = f"Previous partial response:\n{previous_response}" if previous_response else ""
+        
+        continuation_context = ""
+        response_type = " complete"
+        if has_remaining_files:
+            continuation_context = (
+                "NOTE: There are more files to analyze after this. "
+                "Please provide a partial response based on the current files only. "
+                "Your response will be combined with analysis of the remaining files."
+            )
+            response_type = " partial"
+        
+        return {
+            "previous_response_context": previous_response_context,
+            "continuation_context": continuation_context,
+            "response_type": response_type
+        }
+
 if __name__ == "__main__":
     prompt_manager = PromptManager()
     prompt_template = PromptTemplate(

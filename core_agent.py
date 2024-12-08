@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from managers.llm_manager import LLMManager
 from managers.file_manager import FileManager
 from managers.token_manager import TokenManager
@@ -20,11 +20,12 @@ class CoreAgent:
     
     def run_core_process(self, user_query: str) -> str:
         prompt_manager = PromptManager()
-        result = self.find_relevant_files(user_query, prompt_manager)
-        if not result:
+        relevant_files_list = self.find_relevant_files(user_query, prompt_manager)
+        if not relevant_files_list:
             return "No relevant files found"
         
-        return result
+        last_respond = self.process_code_query(user_query, relevant_files_list)
+        return last_respond
     
     def find_relevant_files(self, user_query: str, prompt_manager: PromptManager) -> list:
         """
@@ -55,10 +56,77 @@ class CoreAgent:
         if not all_relevant_files:
             return []
         return self.file_manager.verify_files_list_paths(all_relevant_files)
+    
+    def process_code_query(self, user_query: str, file_paths: list) -> str:
+        """
+        Process a user query about specific code files.
+        
+        Args:
+            user_query (str): The user's question about the code
+            file_paths (list): List of relevant file paths to analyze
+            
+        Returns:
+            str: The response to the user's query
+        """
+        remaining_files = file_paths
+        previous_response = ""
+        final_response = []
+        
+        prompt_manager = PromptManager()
+        query_chain = prompt_manager.create_code_query_chain(self.llm_model)
+        
+        while remaining_files:
+            # Get next batch of file contents
+            content_chunk, remaining_files = self._get_next_content_chunk(user_query, remaining_files)
+            if not content_chunk:
+                break
+            
+            # Get LLM response for current chunk
+            result = self._process_content_chunk(
+                query_chain, 
+                prompt_manager,
+                content_chunk, 
+                user_query, 
+                previous_response, 
+                bool(remaining_files)
+            )
+            
+            final_response.append(result)
+            previous_response = result
+        
+        return self._format_final_response(final_response)
+
+    def _get_next_content_chunk(self, user_query: str, remaining_files: list) -> Tuple[str, list]:
+        """Gets the next chunk of file contents that fits within token limits"""
+        return self.token_manager.get_possible_files_content(user_query, remaining_files)
+
+    def _process_content_chunk(
+        self, 
+        chain, 
+        prompt_manager: PromptManager,
+        content: str, 
+        query: str, 
+        previous_response: str, 
+        has_remaining_files: bool
+    ) -> str:
+        """Processes a single chunk of content through the LLM"""
+        context = prompt_manager.prepare_query_context(previous_response, has_remaining_files)
+        
+        return chain.invoke({
+            "code_content": content,
+            "user_query": query,
+            **context
+        })
+
+    def _format_final_response(self, responses: list) -> str:
+        """Formats the final response from all chunks"""
+        if not responses:
+            return "Could not process any files due to token limitations or file access issues."
+        return responses[-1]
 
     
     
 if __name__ == "__main__":
     core_agent = CoreAgent(model_name="azure", src_path=r"C:\CodeAce\managers")
-    user_query = "write all the files in the JSON"
+    user_query = "'תכתוב סקריפט של בוט בממשק CLI המשתמש יכניס בהתחלה את שם המודל שהוא רוצה להשתמש ואז יתממשק עם הצאט דרך CLI'"
     print(core_agent.run_core_process(user_query))
