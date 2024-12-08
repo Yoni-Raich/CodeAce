@@ -17,17 +17,17 @@ class CoreAgent:
         self.mapping_data = self.file_manager.get_mapping_data()
         self.sammry_data = self.file_manager.read_summary()
         self.token_manager = TokenManager(self.llm_model)
+        self.prompt_manager = PromptManager()
     
     def run_core_process(self, user_query: str) -> str:
-        prompt_manager = PromptManager()
-        relevant_files_list = self.find_relevant_files(user_query, prompt_manager)
+        relevant_files_list = self.find_relevant_files(user_query)
         if not relevant_files_list:
             return "No relevant files found"
         
         last_respond = self.process_code_query(user_query, relevant_files_list)
         return last_respond
     
-    def find_relevant_files(self, user_query: str, prompt_manager: PromptManager) -> list:
+    def find_relevant_files(self, user_query: str) -> list:
         """
         Find relevant files based on user query by processing data in chunks that fit token limits
         Returns a list of relevant file paths
@@ -41,7 +41,7 @@ class CoreAgent:
                 user_query, 
                 remaining_items
             )
-            search_chain = prompt_manager.create_mappint_searcher_promtp_chain(self.llm_model)
+            search_chain = self.prompt_manager.create_mappint_searcher_promtp_chain(self.llm_model)
             result = search_chain.invoke(input={
                 "user_query": user_query, 
                 "mapping_data": selected_items
@@ -72,8 +72,7 @@ class CoreAgent:
         previous_response = ""
         final_response = []
         
-        prompt_manager = PromptManager()
-        query_chain = prompt_manager.create_code_query_chain(self.llm_model)
+        query_chain = self.prompt_manager.create_code_query_chain(self.llm_model)
         
         while remaining_files:
             # Get next batch of file contents
@@ -84,7 +83,6 @@ class CoreAgent:
             # Get LLM response for current chunk
             result = self._process_content_chunk(
                 query_chain, 
-                prompt_manager,
                 content_chunk, 
                 user_query, 
                 previous_response, 
@@ -103,14 +101,13 @@ class CoreAgent:
     def _process_content_chunk(
         self, 
         chain, 
-        prompt_manager: PromptManager,
         content: str, 
         query: str, 
         previous_response: str, 
         has_remaining_files: bool
     ) -> str:
         """Processes a single chunk of content through the LLM"""
-        context = prompt_manager.prepare_query_context(previous_response, has_remaining_files)
+        context = self.prompt_manager.prepare_query_context(previous_response, has_remaining_files)
         
         return chain.invoke({
             "code_content": content,

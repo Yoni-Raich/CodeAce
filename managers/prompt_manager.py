@@ -87,13 +87,13 @@ class PromptManager:
     
     def create_mappint_searcher_promtp_chain(self, llm)-> RunnableSequence:
         """Creates a mapping chain combining prompt template, LLM, and parser"""
-        # Initialize the JSON parser with our schema
         parser = JsonOutputParser(pydantic_object=RelevantFiles)
         
-        # Define the search prompt template
+        # Updated search prompt to be more strict about relevance
         search_prompt = PromptTemplate(
-            template="""You are an AI assistant designed to help users find relevant files in a codebase based on a summary JSON file. 
-                When a user provides a query, analyze it and determine which files are most likely relevant.
+            template="""You are an AI assistant helping users find relevant files in a codebase.
+                Analyze the user query carefully - if it's just a greeting or doesn't contain a specific
+                technical question or request, return an empty list of files.
                 
                 The JSON data contains file information in this format:
                 [
@@ -108,8 +108,8 @@ class PromptManager:
                 User Query: {user_query}
                 Available Files Data: {mapping_data}
 
-                Return ONLY the most relevant files that can be related to the user query.
-                Focus on the file paths that are most relevant to solving the user's query.
+                Return files ONLY if the query contains a specific technical question or request.
+                For greetings or general conversation, return an empty list.
                 {format_instructions}
                 """,
             input_variables=["user_query", "mapping_data"],
@@ -118,7 +118,6 @@ class PromptManager:
             }
         )
         
-        # Combine the components: prompt template, LLM, and parser
         return search_prompt | llm | parser
 
     def create_code_query_chain(self, llm) -> RunnableSequence:
@@ -132,15 +131,18 @@ class PromptManager:
 
     def _get_code_query_prompt_template(self) -> str:
         """Returns the template for code query prompts"""
-        return """You are an expert software developer and code analyst. Your task is to answer the user's question based on the provided code files.
+        return """You are an expert software developer and code analyst. 
         
         Guidelines:
-        1. Analyze the code thoroughly to provide accurate answers
-        2. Reference specific parts of the code when relevant
-        3. If the answer requires code examples, provide them
-        4. If you're unsure about something, acknowledge the uncertainty
-        5. Focus on the specific files and code provided
-        6. If this is a continuation of a previous response, build upon it without repeating information
+        1. For general greetings or non-technical queries, respond briefly and naturally
+        2. For technical questions:
+            - Analyze the code thoroughly
+            - Reference specific parts of the code when relevant
+            - Provide code examples if needed
+            - Acknowledge any uncertainties
+            - Focus on the specific files and code provided
+        3. Keep responses concise and relevant to the query's complexity
+        4. If this is a continuation of a previous response, build upon it without repeating information
         
         {previous_response_context}
         
@@ -151,7 +153,7 @@ class PromptManager:
         
         {continuation_context}
         
-        Please provide a{response_type} answer based on the code above:"""
+        Please provide a{response_type} answer that matches the complexity and nature of the query:"""
 
     def prepare_query_context(self, previous_response: str, has_remaining_files: bool) -> Dict[str, str]:
         """Prepares context information for the code query"""
