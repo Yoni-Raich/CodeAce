@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from typing import List, Dict
 from managers.file_manager import FileManager
 from managers.prompt_manager import PromptManager
-
+from utils.utils import Utils
 # Example of how to use the LLMManager to generate text
 # llm_manager = LLMManager()
 # parser = JsonOutputParser(pydantic_object=MappingFile)
@@ -34,7 +34,7 @@ class MappingAgent:
         self.llm_model = llm_manager.create_model_instance_by_name(model_name)
         self.src_path = src_path
         if not app_data_path:
-            app_data_path = os.path.join(src_path, "CodeAce", "app_data")
+            app_data_path = Utils.get_app_data_path(src_path)
         
         self.app_data_path = app_data_path
         self.file_manager = FileManager(src_path, app_data_path)
@@ -58,10 +58,8 @@ class MappingAgent:
         # Process each file
         for file_path in code_files:
             try:
-                print(f"Processing file: {file_path} ...")
+                Utils.print_processing_message(file_path, len(code_files), code_files.index(file_path))
                 self.process_single_file(file_path)
-                print(f"File {file_path} processed successfully.\n\n")
-            
             except Exception as e:
                 print(f"Error processing file {file_path}: {str(e)}")
                 self.unmapped_files.append(file_path)
@@ -116,6 +114,7 @@ class MappingAgent:
         summary = summary_chain.invoke(input={"existing_summary": last_summary,"file_name":file_path , "file_content":content})
         self.file_manager.save_summary(summary)
     
+    # TODO - Is this function needed?
     def _create_mapping_structure(self, 
                                 file_path: str, 
                                 description: Dict) -> dict:
@@ -132,7 +131,7 @@ class MappingAgent:
 
 if __name__ == "__main__":
     agent = MappingAgent(
-        model_name="gemini",
+        model_name="azure",
         src_path=r"C:\CodeAce\managers",
     )
     agent.run_mapping_process()

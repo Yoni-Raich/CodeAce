@@ -3,6 +3,7 @@ import json
 from typing import List, Dict
 from pathlib import Path
 
+
 class FileManager:
     def __init__(self, src_path: str, app_data_path: str):
         """
@@ -22,7 +23,9 @@ class FileManager:
         if not os.path.exists(self.main_json_path):
             with open(self.main_json_path, 'w', encoding='utf-8') as f:
                 json.dump([], f)
-
+    
+    
+    
     def _create_app_data_dir(self) -> None:
         """Create app_data directory if it doesn't exist"""
         os.makedirs(self.app_data_path, exist_ok=True)
@@ -103,7 +106,20 @@ class FileManager:
             return []
         except IOError as e:
             raise IOError(f"Error reading mapping file at {self.main_json_path}: {str(e)}")
-
+    
+    def get_mapping_data(self) -> Dict:
+        """
+        Get mapping data from main JSON file
+        """
+        try:
+            with open(self.main_json_path, 'r', encoding='utf-8') as f:
+                mappings = json.load(f)
+                return mappings
+        except FileNotFoundError:
+            return []
+        except IOError as e:
+            raise IOError(f"Error reading mapping file at {self.main_json_path}: {str(e)}")
+    
     def save_summary(self, summary: str) -> None:
         """
         Save summary to a markdown file
@@ -127,6 +143,51 @@ class FileManager:
                 file.write("This document contains summaries of the codebase files.")
         except IOError as e:
             raise IOError(f"Error reading file at {self.summary_doc_path}: {str(e)}")
+
+    def get_summary_data(self) -> str:
+        """
+        Get summary data from markdown file
+        """
+        try:
+            with open(self.summary_doc_path, 'r', encoding='utf-8') as f:
+                summary = f.read()
+                return summary
+        except IOError as e:
+            raise IOError(f"Error reading summary file at {self.summary_doc_path}: {str(e)}")
+
+    def verify_files_list_paths(self, file_paths: List[str]) -> List[str]:
+        """
+        Verify and correct file paths in the given list.
+        If a path doesn't exist, searches for the file by name in the source directory.
+        Returns a list of corrected paths, removing invalid ones.
+        
+        Args:
+            file_paths: List of file paths to verify
+            
+        Returns:
+            List of verified and corrected file paths
+        """
+        verified_paths = []
+        
+        for file_path in file_paths:
+            if os.path.exists(file_path):
+                verified_paths.append(file_path)
+            else:
+                # Get just the filename from the path
+                file_name = os.path.basename(file_path)
+                
+                # Search for the file in the source directory
+                found = False
+                for root, _, files in os.walk(self.src_path):
+                    if file_name in files:
+                        new_path = os.path.join(root, file_name)
+                        verified_paths.append(new_path)
+                        found = True
+                        break
+                        
+                # If file wasn't found, it will be skipped
+        
+        return verified_paths
 
 #Tests...
 if __name__ == "__main__":
