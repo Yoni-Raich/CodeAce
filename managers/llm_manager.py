@@ -1,4 +1,5 @@
 from langchain_core.language_models import BaseLLM
+from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -18,6 +19,11 @@ class LLMManager:
             "ollama": self._get_ollama_llm,
             "gemini": self._get_gemini_llm,
         }
+    # TODO - Add model mane and max tokens all models
+    def create_model_instance_by_name(self, model_name: str) -> BaseChatModel:
+        if model_name not in self.supported_llms:
+            raise ValueError(f"Model {model_name} is not supported.")
+        return self.supported_llms[model_name]()    
     
     def _initialize_api_key(self, provider: str, api_key: Optional[str] = None) -> str:
         """Initialize API key for a provider."""
@@ -44,7 +50,7 @@ class LLMManager:
         api_key = self._initialize_api_key("openai", kwargs.pop("api_key", None))
         default_params = {
             "model": "gpt-3.5-turbo",
-            "temperature": 0.7,
+            "temperature": 0.2,
             "openai_api_key": api_key,
         }
         
@@ -61,7 +67,7 @@ class LLMManager:
         api_key = self._initialize_api_key("anthropic", kwargs.pop("api_key", None))
         default_params = {
             "model": "claude-3-sonnet-20240229",
-            "temperature": 0.7,
+            "temperature": 0.2,
             "anthropic_api_key": api_key,
         }
         params = {**default_params, **kwargs}
@@ -87,11 +93,13 @@ class LLMManager:
                 "Azure API version is required. Set AZ_OPENAI_API_VERSION env var or pass openai_api_version")
         
         default_params = {
-            "temperature": 0.7,
+            "temperature": 0.2,
             "openai_api_key": openai_api_key,  # Azure uses this parameter
             "azure_endpoint": azure_endpoint,
             "azure_deployment": azure_deployment,
             "openai_api_version": openai_api_version,
+            "model": "gpt-4o",
+            "max_tokens": 4096
         }
         
 
@@ -103,7 +111,7 @@ class LLMManager:
         """Initialize an Ollama LLM instance."""
         default_params = {
             "model": "llama3.2",
-            "temperature": 0.7,
+            "temperature": 0.2,
             "base_url": "http://localhost:11434"
         }
         params = {**default_params, **kwargs}
@@ -114,8 +122,16 @@ class LLMManager:
         api_key = self._initialize_api_key("gemini", kwargs.pop("api_key", None))
         default_params = {
             "model": "gemini-1.5-flash-002",
-            "temperature": 0.7,
+            "temperature": 0.2,
             "google_api_key": api_key,
         }
         params = {**default_params, **kwargs}
         return ChatGoogleGenerativeAI(**params)
+
+
+if __name__ == '__main__':
+    llm_manager = LLMManager()
+    llm = llm_manager._get_azure_openai_llm()
+    print(llm.model_name)
+    print(llm.max_tokens)
+    

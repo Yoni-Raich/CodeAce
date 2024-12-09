@@ -1,0 +1,8 @@
+langchain_core
+langchain
+pydantic
+openai
+python_dotenv
+langchain_anthropic
+langchain_google_genai
+langchain_ollama
