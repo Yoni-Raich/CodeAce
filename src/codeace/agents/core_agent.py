@@ -1,11 +1,17 @@
 from typing import Dict, Tuple
-from managers.llm_manager import LLMManager
-from managers.file_manager import FileManager
-from managers.token_manager import TokenManager
-from managers.prompt_manager import PromptManager
-from utils.utils import Utils
+from ..managers.llm_manager import LLMManager
+from ..managers.file_manager import FileManager
+from ..managers.token_manager import TokenManager
+from ..managers.prompt_manager import PromptManager
+from ..utils.utils import Utils
 class CoreAgent:
     def __init__(self, model_name: str, src_path: str, app_data_path = None):
+        """
+        Initialize the core agent with:
+        - LLM model name - supported list (openai, azure, ollama, gemini, anthropic)
+        - Source code path
+        - Optional: app_data_path for JSON files (if None, will be created automatically)
+        """
         self.src_path = src_path
         if app_data_path is None:
             app_data_path = Utils.get_app_data_path(src_path)

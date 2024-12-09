@@ -1,25 +1,14 @@
 import json
 import os
-from managers.llm_manager import LLMManager
+from ..managers.llm_manager import LLMManager
+from ..managers.file_manager import FileManager
+from ..managers.prompt_manager import PromptManager
+from ..utils.utils import Utils
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
 from typing import List, Dict
-from managers.file_manager import FileManager
-from managers.prompt_manager import PromptManager
-from utils.utils import Utils
-# Example of how to use the LLMManager to generate text
-# llm_manager = LLMManager()
-# parser = JsonOutputParser(pydantic_object=MappingFile)
-# llm = llm_manager._get_azure_openai_llm()
-# promtp = prompt = PromptTemplate(
-#     template="Answer the user query.\n{format_instructions}\n{query}\n",
-#     input_variables=["query"],
-#     partial_variables={"format_instructions": parser.get_format_instructions()},
-# )
 
-# chain = prompt | llm | parser
-# js = chain.invoke(input={"query": "file path: c:\\user\\files\\hellofile.txt\n Hello to the world"})
 class MappingAgent:
     def __init__(self, model_name: str, src_path: str, app_data_path: str = None):
         """
