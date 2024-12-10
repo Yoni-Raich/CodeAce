@@ -67,7 +67,7 @@ def run_mapping_process(src_path):
     """Run the mapping process for the selected source"""
     with st.spinner('Running mapping process...'):
         mapping_agent = MappingAgent(model_name="azure", src_path=src_path)
-        mapping_agent.run_mapping_process()
+        mapping_agent.run_mapping_process(generate_summery = False)
         st.session_state.core_agent = CoreAgent(model_name="azure", src_path=src_path)
         st.session_state.mapping_done = True
         return True
@@ -81,7 +81,16 @@ with st.sidebar:
     # Source directory input
     src_path = st.text_input("Source Directory Path")
     if src_path:
-        st.session_state.current_source = src_path
+        if src_path != st.session_state.current_source:  # Check if path has changed
+            st.session_state.current_source = src_path
+            # Initialize CoreAgent immediately when path is entered
+            try:
+                st.session_state.core_agent = CoreAgent(model_name="azure", src_path=src_path)
+                st.info("CoreAgent initialized with new source path")
+                st.session_state.mapping_done = False  # Reset mapping status
+            except:
+                st.info("The source directory path does not contain CodeAce data, please run the mapping process.")
+                
         if st.button("Run Mapping Process"):
             if run_mapping_process(src_path):
                 st.success("Mapping completed!")
@@ -114,15 +123,12 @@ for message in st.session_state.messages:
 
 # Chat input
 if prompt := st.chat_input("What would you like to know about the code?"):
-    if not st.session_state.mapping_done:
-        st.error("Please run the mapping process first.")
-    else:
-        # Display user message
-        st.chat_message("user", avatar=USER_AVATAR_PATH).markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # Get and display assistant response
-        response = process_user_query(st.session_state.messages)
-        with st.chat_message("assistant", avatar=ASSISTANT_AVATAR_PATH):
-            st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    # Display user message
+    st.chat_message("user", avatar=USER_AVATAR_PATH).markdown(prompt)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    # Get and display assistant response
+    response = process_user_query(st.session_state.messages)
+    with st.chat_message("assistant", avatar=ASSISTANT_AVATAR_PATH):
+        st.markdown(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
