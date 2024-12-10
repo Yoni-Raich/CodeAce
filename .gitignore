@@ -2,3 +2,4 @@ venv/
 .env
 managers/__pycache__/
 .cursorignore
+/streamlit_gui/__pycache__
