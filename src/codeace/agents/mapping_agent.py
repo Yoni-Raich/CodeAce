@@ -29,7 +29,7 @@ class MappingAgent:
         self.file_manager = FileManager(src_path, app_data_path)
         self.unmapped_files = []
 
-    def run_mapping_process(self, ovveride: bool = False) -> None:
+    def run_mapping_process(self, ovveride: bool = False, generate_summery = True) -> None:
         """
         Main function to run the entire mapping process:
         1. Scan source directory
@@ -48,7 +48,7 @@ class MappingAgent:
         for file_path in code_files:
             try:
                 Utils.print_processing_message(file_path, len(code_files), code_files.index(file_path))
-                self.process_single_file(file_path)
+                self.process_single_file(file_path, generate_summery)
             except Exception as e:
                 print(f"Error processing file {file_path}: {str(e)}")
                 self.unmapped_files.append(file_path)
@@ -58,7 +58,7 @@ class MappingAgent:
             for file in self.unmapped_files:
                 print(f"Unmapped file: {file}")
     
-    def process_single_file(self, file_path: str) -> None:
+    def process_single_file(self, file_path: str, generate_summery = True) -> None:
         """
         Process a single file and save mapping results
         """
@@ -69,8 +69,9 @@ class MappingAgent:
             # Generate description using LLM
             description = self._generate_file_description(content, file_path)
             
-            # Generate summary using LLM
-            self._generate_summary(content, file_path)
+            if generate_summery:
+                # Generate summary using LLM
+                self._generate_summary(content, file_path)
 
             # Create mapping structure
             mapping_data = self._create_mapping_structure(file_path,description)
@@ -110,6 +111,8 @@ class MappingAgent:
         """
         Create standardized mapping structure to save in JSON
         """
+        # save file_path to relative path from src_path
+        file_path = os.path.relpath(file_path, self.src_path)
         return { 
             "file_name": file_path,
             "description": description["description"],
@@ -121,6 +124,6 @@ class MappingAgent:
 if __name__ == "__main__":
     agent = MappingAgent(
         model_name="azure",
-        src_path=r"C:\CodeAce\managers",
+        src_path=r"C:\CodeAce\src\codeace\agents",
     )
     agent.run_mapping_process()

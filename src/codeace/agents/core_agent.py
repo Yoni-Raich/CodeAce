@@ -74,6 +74,9 @@ class CoreAgent:
         Returns:
             str: The response to the user's query
         """
+        if not file_paths:
+            return f"No relevant files found for query, will call the llm model with the query only.\n{self.llm_model.invoke(user_query).content}"
+
         remaining_files = file_paths
         previous_response = ""
         final_response = []

@@ -170,6 +170,7 @@ class FileManager:
         verified_paths = []
         
         for file_path in file_paths:
+            file_path = os.path.join(self.src_path, file_path)
             if os.path.exists(file_path):
                 verified_paths.append(file_path)
             else:
