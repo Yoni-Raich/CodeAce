@@ -5,7 +5,7 @@ from ..managers.token_manager import TokenManager
 from ..managers.prompt_manager import PromptManager
 from ..utils.utils import Utils
 class CoreAgent:
-    def __init__(self, model_name: str, src_path: str, app_data_path = None):
+    def __init__(self, model_name: str, src_path: str, app_data_path = None, extra_context_doc_path = None):
         """
         Initialize the core agent with:
         - LLM model name - supported list (openai, azure, ollama, gemini, anthropic)
@@ -24,7 +24,9 @@ class CoreAgent:
         self.sammry_data = self.file_manager.read_summary()
         self.token_manager = TokenManager(self.llm_model)
         self.prompt_manager = PromptManager()
-    
+        self.extra_context_doc = self.file_manager.read_extra_context_doc(extra_context_doc_path)
+        
+
     def run_core_process(self, user_query: str) -> str:
         relevant_files_list = self.find_relevant_files(user_query)
         if not relevant_files_list:
@@ -75,7 +77,7 @@ class CoreAgent:
             str: The response to the user's query
         """
         if not file_paths:
-            return f"No relevant files found for query, will call the llm model with the query only.\n{self.llm_model.invoke(user_query).content}"
+            return f"No relevant files found for query, will call the llm model with the query only.\n\n{self.llm_model.invoke(user_query).content}"
 
         remaining_files = file_paths
         previous_response = ""
@@ -102,10 +104,28 @@ class CoreAgent:
             previous_response = result
         
         return self._format_final_response(final_response)
+    def add_extra_context(self, extra_context_doc: str, override: bool = False) -> None:
+        """
+        Add extra context document to the agent.
+        If override is True, the existing context will be replaced.
+        """
+        if override:
+            self.extra_context_doc = extra_context_doc
+        else:
+            self.extra_context_doc = f"{self.extra_context_doc}\n{extra_context_doc}"
+    
+    def add_extra_context_by_path(self, extra_context_doc_path :str = None, override: bool = False) -> None:
+        """
+        Add extra context document to the agent.
+        If override is True, the existing context will be replaced.
+        """
+        extra_context_doc = self.file_manager.read_extra_context_doc(extra_context_doc_path)
+        self.add_extra_context(extra_context_doc, override)
 
+    
     def _get_next_content_chunk(self, user_query: str, remaining_files: list) -> Tuple[str, list]:
         """Gets the next chunk of file contents that fits within token limits"""
-        return self.token_manager.get_possible_files_content(user_query, remaining_files)
+        return self.token_manager.get_possible_files_content(user_query,self.extra_context_doc, remaining_files)
 
     def _process_content_chunk(
         self, 
@@ -119,6 +139,7 @@ class CoreAgent:
         context = self.prompt_manager.prepare_query_context(previous_response, has_remaining_files)
         
         return chain.invoke({
+            "context": self.extra_context_doc,
             "code_content": content,
             "user_query": query,
             **context

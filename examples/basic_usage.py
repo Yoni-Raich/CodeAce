@@ -2,7 +2,7 @@ from codeace import MappingAgent, CoreAgent
 src = r"\\10.12.231.83\c\Users\Administrator\Documents\repositories\Temp\MfgTools\src"
 
 mapping_agent = MappingAgent(model_name="azure", src_path=src)
-mapping_agent.run_mapping_process()
+#mapping_agent.run_mapping_process()
 core_agent = CoreAgent(model_name="azure", src_path=src)
 
 user_prompt = input("Enter your query: ")

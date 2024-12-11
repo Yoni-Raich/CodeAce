@@ -93,7 +93,7 @@ class LLMManager:
                 "Azure API version is required. Set AZ_OPENAI_API_VERSION env var or pass openai_api_version")
         
         default_params = {
-            "temperature": 0.2,
+            "temperature": 0.1,
             "openai_api_key": openai_api_key,  # Azure uses this parameter
             "azure_endpoint": azure_endpoint,
             "azure_deployment": azure_deployment,
