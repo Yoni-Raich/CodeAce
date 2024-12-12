@@ -220,7 +220,8 @@ class FileManager:
                         break
                         
                 # If file wasn't found, it will be skipped
-        
+        # Filter out duplicates
+        verified_paths = list(dict.fromkeys(verified_paths))
         return verified_paths
 
 #Tests...

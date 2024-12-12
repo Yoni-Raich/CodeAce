@@ -20,10 +20,12 @@ class LLMManager:
             "gemini": self._get_gemini_llm,
         }
     # TODO - Add model mane and max tokens all models
-    def create_model_instance_by_name(self, model_name: str) -> BaseChatModel:
-        if model_name not in self.supported_llms:
-            raise ValueError(f"Model {model_name} is not supported.")
-        return self.supported_llms[model_name]()    
+    def create_model_instance_by_name(self, model_type: str, _model_name: str = None) -> BaseChatModel:
+        if model_type not in self.supported_llms:
+            raise ValueError(f"Model {model_type} is not supported.")
+        if _model_name is not None:
+            return self.supported_llms[model_type](model_name=_model_name) 
+        return self.supported_llms[model_type]()   
     
     def _initialize_api_key(self, provider: str, api_key: Optional[str] = None) -> str:
         """Initialize API key for a provider."""
@@ -74,9 +76,11 @@ class LLMManager:
         return ChatAnthropic(**params)
 
     def _get_azure_openai_llm(self, **kwargs) -> AzureChatOpenAI:
+        model_name = kwargs.pop("model_name", "AZ_OPENAI_LLM_4_O")
+        model_name = os.getenv(model_name)
         """Initialize an Azure OpenAI LLM instance."""
         openai_api_key = self._initialize_api_key("azure", kwargs.pop("api_key", None))
-        azure_deployment = os.getenv("AZ_OPENAI_LLM_4_O")
+        azure_deployment = model_name
         azure_endpoint = os.getenv("AZ_OPENAI_API_BASE")
         openai_api_version = os.getenv("AZ_OPENAI_API_VERSION")
         
@@ -131,7 +135,13 @@ class LLMManager:
 
 if __name__ == '__main__':
     llm_manager = LLMManager()
-    llm = llm_manager._get_azure_openai_llm()
+    llm = llm_manager._get_azure_openai_llm(model_name='AZ_OPENAI_LLM_4_O_MINI')
     print(llm.model_name)
     print(llm.max_tokens)
-    
+    # test the model response time save the time before and after the model response
+    import time
+    start = time.time()
+    response = llm.invoke("Write a very long text")
+    end = time.time()
+    print(response)
+    print(f"\n\nTime taken: {end-start} seconds")

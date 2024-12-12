@@ -175,6 +175,80 @@ class PromptManager:
             "response_type": response_type
         }
 
+    def _get_dependencies_analysis_prompt_template(self) -> str:
+        """Returns the template for analyzing project dependencies and modules"""
+        return """You are an expert software architect analyzing project dependencies and modules.
+
+        Your task is to create a concise analysis focusing on reusable code components:
+
+        1. Identify and extract code snippets that could be useful for future implementations
+        2. For each relevant code section:
+           - Extract the exact code snippet
+           - Add a brief description of its purpose
+           - Note any dependencies or requirements
+        3. Focus only on code that could be directly reused or adapted
+        4. Create a compact summary that can serve as a self-contained reference
+
+        Guidelines:
+        - Include complete, working code snippets that can be used without referring back to source files
+        - Keep descriptions brief but clear
+        - Include only the most relevant and reusable components
+        - Format code snippets with proper markdown for easy extraction
+        
+        Dependencies and Modules Content:
+        {code_content}
+        
+        User Question: {user_query}
+        
+        {continuation_context}
+        
+        Please provide a{response_type} analysis in this format:
+        1. Brief overview of found functionality (2-3 sentences max)
+        2. Relevant code snippets formatted as:       ```language
+           // Purpose: [brief description]
+           // Dependencies: [if any]
+           [exact code]       ```
+        3. Quick reference of integration points (if applicable)"""
+
+    def create_dependencies_analysis_chain(self, llm) -> RunnableSequence:
+        """Creates a chain for analyzing project dependencies and modules"""
+        prompt_template = PromptTemplate(
+            template=self._get_dependencies_analysis_prompt_template(),
+            input_variables=["code_content", "user_query", "continuation_context", "response_type"]
+        )
+        
+        return prompt_template | llm | StrOutputParser()
+
+    def create_prompt_improver_chain(self, llm) -> RunnableSequence:
+        """Creates a chain for improving user prompts with documentation context"""
+        prompt_template = PromptTemplate(
+            template="""You are an expert prompt engineer. Your task is to improve and restructure the user's query
+            into a clear, concise prompt that will be used to generate code.
+
+            Guidelines:
+            1. Analyze both the user query and provided documentation
+            2. Create a structured prompt that:
+               - Maintains the original intent
+               - Is more specific and detailed
+               - Includes relevant technical context
+               - Remains concise (no more than 2-3 sentences)
+            3. DO NOT:
+               - Add unnecessary complexity
+               - Deviate from the original request
+               - Make assumptions beyond the provided information
+
+            Documentation Context:
+            {documentation}
+
+            Original User Query:
+            {user_query}
+
+            Please provide an improved prompt that is clear, specific, and ready for code generation:""",
+            input_variables=["documentation", "user_query"]
+        )
+        
+        return prompt_template | llm | StrOutputParser()
+
 if __name__ == "__main__":
     prompt_manager = PromptManager()
     prompt_template = PromptTemplate(

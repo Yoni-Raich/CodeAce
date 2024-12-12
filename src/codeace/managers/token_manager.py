@@ -30,7 +30,7 @@ class TokenManager:
         
         encoding = tiktoken.encoding_for_model(self.llm.model_name)
         max_tokens = self.llm.max_tokens
-        return encoding, 32768
+        return encoding, 128000
         
        
 
