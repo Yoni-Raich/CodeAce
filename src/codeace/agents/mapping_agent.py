@@ -20,7 +20,7 @@ class MappingAgent:
         """
         llm_manager = LLMManager()
         self.prompt_manager = PromptManager()
-        self.llm_model = llm_manager.create_model_instance_by_name(model_name)
+        self.llm_model = llm_manager.create_model_instance_by_name(model_name, 'AZ_OPENAI_LLM_4_O_MINI')
         self.src_path = src_path
         if not app_data_path:
             app_data_path = Utils.get_app_data_path(src_path)
