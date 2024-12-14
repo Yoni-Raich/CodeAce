@@ -29,12 +29,15 @@ class MappingAgent:
         self.file_manager = FileManager(src_path, app_data_path)
         self.unmapped_files = []
 
-    def run_mapping_process(self, ovveride: bool = False, generate_summery = True) -> None:
+    def run_mapping_process(self, ovveride: bool = False, generate_summery = True):
         """
         Main function to run the entire mapping process:
         1. Scan source directory
         2. Process each file
         3. Save mapping results
+
+        Yields:
+            str: Status message for each file being processed
         """
         
         # Get all relevant files from FileManager
@@ -47,16 +50,20 @@ class MappingAgent:
         # Process each file
         for file_path in code_files:
             try:
-                Utils.print_processing_message(file_path, len(code_files), code_files.index(file_path))
+                current_index = code_files.index(file_path)
+                status_message = f"Processing {current_index + 1}/{len(code_files)}: {os.path.basename(file_path)}"
+                yield status_message
+                
                 self.process_single_file(file_path, generate_summery)
             except Exception as e:
-                print(f"Error processing file {file_path}: {str(e)}")
+                error_message = f"Error processing file {file_path}: {str(e)}"
+                yield error_message
                 self.unmapped_files.append(file_path)
                 continue
 
-            print(f"Mapping process completed. {len(self.unmapped_files)} files could not be processed.")
-            for file in self.unmapped_files:
-                print(f"Unmapped file: {file}")
+        yield f"Mapping process completed. {len(self.unmapped_files)} files could not be processed."
+        for file in self.unmapped_files:
+            yield f"Unmapped file: {file}"
     
     def process_single_file(self, file_path: str, generate_summery = True) -> None:
         """
@@ -126,4 +133,5 @@ if __name__ == "__main__":
         model_name="azure",
         src_path=r"C:\CodeAce\src\codeace\agents",
     )
-    agent.run_mapping_process()
+    for status in agent.run_mapping_process():
+        print(status)

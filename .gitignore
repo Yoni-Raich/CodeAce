@@ -7,3 +7,5 @@ managers/__pycache__/
 /src/codeace/__pycache__
 /src/codeace/agents/CodeAce
 /.vscode
+/src/codeace/agents/__pycache__
+/src/codeace/__pycache__
