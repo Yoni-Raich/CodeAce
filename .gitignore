@@ -6,3 +6,4 @@ managers/__pycache__/
 /src/codeace.egg-info
 /src/codeace/__pycache__
 /src/codeace/agents/CodeAce
+/.vscode

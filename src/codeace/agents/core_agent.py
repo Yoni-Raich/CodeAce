@@ -65,13 +65,14 @@ class CoreAgent:
             return []
         return self.file_manager.verify_files_list_paths(all_relevant_files)
     
-    def process_code_query(self, user_query: str, file_paths: list) -> str:
+    def _process_code_query_logic(self, user_query: str, file_paths: list, query_chain) -> str:
         """
-        Process a user query about specific code files.
+        Core logic for processing code queries.
         
         Args:
             user_query (str): The user's question about the code
             file_paths (list): List of relevant file paths to analyze
+            query_chain: The chain to use for processing the query
             
         Returns:
             str: The response to the user's query
@@ -83,15 +84,11 @@ class CoreAgent:
         previous_response = ""
         final_response = []
         
-        query_chain = self.prompt_manager.create_code_query_chain(self.llm_model)
-        
         while remaining_files:
-            # Get next batch of file contents
             content_chunk, remaining_files = self._get_next_content_chunk(user_query, remaining_files)
             if not content_chunk:
                 break
             
-            # Get LLM response for current chunk
             result = self._process_content_chunk(
                 query_chain, 
                 content_chunk, 
@@ -104,6 +101,36 @@ class CoreAgent:
             previous_response = result
         
         return self._format_final_response(final_response)
+
+    def process_code_query(self, user_query: str, file_paths: list) -> str:
+        """
+        Process a user query about specific code files.
+        
+        Args:
+            user_query (str): The user's question about the code
+            file_paths (list): List of relevant file paths to analyze
+            
+        Returns:
+            str: The response to the user's query
+        """
+        query_chain = self.prompt_manager.create_code_query_chain(self.llm_model)
+        return self._process_code_query_logic(user_query, file_paths, query_chain)
+
+    def process_dependencies_query(self, user_query: str, file_paths: list) -> str:
+        """
+        Process a user query about code dependencies.
+        
+        Args:
+            user_query (str): The user's question about the code
+            file_paths (list): List of relevant file paths to analyze
+            
+        Returns:
+            str: The response to the user's query
+        """
+        query_chain = self.prompt_manager.create_dependencies_analysis_chain(self.llm_model)
+        return self._process_code_query_logic(user_query, file_paths, query_chain)
+    
+    
     def add_extra_context(self, extra_context_doc: str, override: bool = False) -> None:
         """
         Add extra context document to the agent.
@@ -113,7 +140,7 @@ class CoreAgent:
             self.extra_context_doc = extra_context_doc
         else:
             self.extra_context_doc = f"{self.extra_context_doc}\n{extra_context_doc}"
-    
+    #TODO - create a method to add the summary to the context
     def add_extra_context_by_path(self, extra_context_doc_path :str = None, override: bool = False) -> None:
         """
         Add extra context document to the agent.
@@ -151,9 +178,29 @@ class CoreAgent:
             return "Could not process any files due to token limitations or file access issues."
         return responses[-1]
 
-    
-    
-if __name__ == "__main__":
-    core_agent = CoreAgent(model_name="azure", src_path=r"C:\CodeAce\managers")
-    user_query = "'תכתוב סקריפט של בוט בממשק CLI המשתמש יכניס בהתחלה את שם המודל שהוא רוצה להשתמש ואז יתממשק עם הצאט דרך CLI'"
-    print(core_agent.run_core_process(user_query))
+    def improve_user_prompt(self, user_query: str) -> str:
+        """
+        Improves the user's prompt by incorporating context from documentation
+        and making it more structured for code generation.
+        
+        Args:
+            user_query (str): The original user query/prompt
+            
+        Returns:
+            str: An improved, more structured version of the prompt
+        """
+        improver_chain = self.prompt_manager.create_prompt_improver_chain(self.llm_model)
+        
+        # Combine project summary and extra context as documentation
+        documentation = f"""Project Summary:
+        {self.sammry_data}
+
+        Additional Context:
+        {self.extra_context_doc}"""
+        
+        improved_prompt = improver_chain.invoke({
+            "documentation": documentation,
+            "user_query": user_query
+        })
+        
+        return improved_prompt
