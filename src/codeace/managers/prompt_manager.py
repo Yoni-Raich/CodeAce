@@ -124,7 +124,7 @@ class PromptManager:
         """Creates a chain for answering queries based on code content"""
         prompt_template = PromptTemplate(
             template=self._get_code_query_prompt_template(),
-            input_variables=["code_content", "user_query", "previous_response_context", "continuation_context", "response_type"]
+            input_variables=["context", "code_content", "user_query", "previous_response_context", "continuation_context", "response_type"]
         )
         
         return prompt_template | llm | StrOutputParser()
@@ -143,6 +143,9 @@ class PromptManager:
             - Focus on the specific files and code provided
         3. Keep responses concise and relevant to the query's complexity
         4. If this is a continuation of a previous response, build upon it without repeating information
+        
+        Additional Context Information:
+        {context}
         
         {previous_response_context}
         
@@ -195,6 +198,9 @@ class PromptManager:
         - Include only the most relevant and reusable components
         - Format code snippets with proper markdown for easy extraction
         
+        Additional Context Information:
+        {context}
+        
         Dependencies and Modules Content:
         {code_content}
         
@@ -214,7 +220,7 @@ class PromptManager:
         """Creates a chain for analyzing project dependencies and modules"""
         prompt_template = PromptTemplate(
             template=self._get_dependencies_analysis_prompt_template(),
-            input_variables=["code_content", "user_query", "continuation_context", "response_type"]
+            input_variables=["context", "code_content", "user_query", "continuation_context", "response_type"]
         )
         
         return prompt_template | llm | StrOutputParser()
