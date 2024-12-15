@@ -1,32 +1,43 @@
 from codeace import MappingAgent, CoreAgent
-src = r"\\10.12.231.83\c\Users\Administrator\Documents\repositories\Temp\MfgTools\src"
-agent = MappingAgent(
-        model_name="azure",
-        src_path=r"C:\CodeAce\src\codeace\agents",
-    )
-for status in agent.run_mapping_process():
-    print(status)
-mapping_agent = MappingAgent(model_name="azure", src_path=src)
-#mapping_agent.run_mapping_process()
-core_agent = CoreAgent(model_name="azure", src_path=src)
+from dotenv import load_dotenv
 
-moduls_src = "\\\\10.12.231.83\\c\\Users\\Administrator\\Documents\\repositories\\New-MfgTools\\Modules\\src\\ManufacturingToolsModules"
-pre_agent = CoreAgent(model_name="azure", src_path=moduls_src)
+# Load environment variables
+load_dotenv()
 
-user_prompt = input("Enter your query: ")
+# Define source paths
+src_path = r"path/to/main/codebase/src"  # Main codebase path
+modules_src = r"path/to/modules/src"      # Modules/dependencies path
+
+# Initialize agents
+mapping_agent = MappingAgent(model_name="azure", src_path=src_path)
+mapping_agent.run_mapping_process()  # Map the main codebase
+
+# Initialize core agents for different parts of the codebase
+main_agent = CoreAgent(model_name="azure", src_path=src_path)
+modules_agent = CoreAgent(model_name="azure", src_path=modules_src)
+
+# Add documentation context
+main_agent.add_extra_context_by_path("path/to/documentation.md")
+
+# Interactive query loop
+user_prompt = input("Enter your query (type 'exit' to quit): ")
 while user_prompt != "exit":
-    core_agent.add_extra_context_by_path(r"C:\streamlit_gui\LineTools_documentation.md")
-    improved_prompt = core_agent.improve_user_prompt(user_prompt)
+    # Improve the user prompt using documentation context
+    improved_prompt = main_agent.improve_user_prompt(user_prompt)
     
-    dependencies_relevant_files = pre_agent.find_relevant_files(user_prompt)
-    dependencies_result = pre_agent.process_dependencies_query(user_prompt, dependencies_relevant_files)
-    print("\n\n")
+    # First, analyze dependencies in modules
+    dependencies_files = modules_agent.find_relevant_files(user_prompt)
+    dependencies_result = modules_agent.process_dependencies_query(user_prompt, dependencies_files)
+    print("\nDependencies Analysis:")
     print(dependencies_result)
-    print("\n\n")
-    core_agent.add_extra_context_by_path()
-    core_agent.add_extra_context(dependencies_result)
-
-    relevant_files = core_agent.find_relevant_files(user_prompt)
-    result = core_agent.process_code_query(user_prompt, relevant_files)
     
-    user_prompt = input("Enter your query: ")
+    # Add dependencies context to main analysis
+    main_agent.add_extra_context(dependencies_result)
+    
+    # Process main codebase query
+    relevant_files = main_agent.find_relevant_files(user_prompt)
+    result = main_agent.process_code_query(user_prompt, relevant_files)
+    print("\nMain Analysis:")
+    print(result)
+    
+    user_prompt = input("\nEnter your query (type 'exit' to quit): ")
