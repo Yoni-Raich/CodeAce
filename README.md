@@ -29,13 +29,78 @@ src_path = "path/to/your/code"
 model_name = "azure"  # or "openai", "gemini", "anthropic"
 
 # Map your codebase (do this once)
+# Note: Mapping process automatically uses GPT-4o-mini for efficient processing
 mapping_agent = MappingAgent(model_name=model_name, src_path=src_path)
 mapping_agent.run_mapping_process()
 
-# Query your code
+# Query your code (uses full model capabilities)
 core_agent = CoreAgent(model_name=model_name, src_path=src_path)
 result = core_agent.run_core_process("Explain how the error handling works in this codebase")
 print(result)
+```
+
+## Advanced Usage
+
+### Mapping Process
+
+The mapping process uses Azure OpenAI's GPT-4o-mini model for optimal performance and cost efficiency. This process:
+- Scans your codebase
+- Analyzes each file
+- Generates descriptions and function lists
+- Creates a searchable index
+- Builds a project summary
+
+```python
+# Initialize mapping agent
+mapping_agent = MappingAgent(model_name="azure", src_path=src_path)
+
+# Run mapping with progress updates
+for status in mapping_agent.run_mapping_process():
+    print(status)  # Shows progress of file processing
+
+# Optional: Force remapping of all files
+mapping_agent.run_mapping_process(override=True)
+
+# Optional: Map without generating summary
+mapping_agent.run_mapping_process(generate_summary=False)
+```
+
+### Context Management
+
+CodeAce supports rich context management to improve code analysis:
+
+```python
+# Initialize agent
+core_agent = CoreAgent(model_name="azure", src_path=src_path)
+
+# Add documentation context from file
+core_agent.add_extra_context_by_path("path/to/documentation.md")
+
+# Add custom context directly
+core_agent.add_extra_context("Additional context information")
+
+# Context is automatically used to improve prompts
+improved_prompt = core_agent.improve_user_prompt(user_query)
+
+# Context is considered during code analysis
+result = core_agent.process_code_query(user_query, relevant_files)
+```
+
+### Multi-Codebase Analysis
+
+You can analyze dependencies across multiple codebases:
+
+```python
+# Initialize agents for different codebases
+main_agent = CoreAgent(model_name="azure", src_path=main_src)
+modules_agent = CoreAgent(model_name="azure", src_path=modules_src)
+
+# Analyze dependencies
+dependencies_result = modules_agent.process_dependencies_query(query, files)
+
+# Use dependencies context in main analysis
+main_agent.add_extra_context(dependencies_result)
+result = main_agent.process_code_query(query, files)
 ```
 
 ## Environment Setup
