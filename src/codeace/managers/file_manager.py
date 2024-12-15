@@ -2,6 +2,7 @@ import os
 import json
 from typing import List, Dict
 from pathlib import Path
+from PyPDF2 import PdfReader
 
 
 class FileManager:
@@ -48,6 +49,38 @@ class FileManager:
                     code_files.append(full_path)
         
         return code_files
+    
+    def read_extra_context_doc(self, extra_context_doc_path: str) -> str:
+        """
+        Read and return extra context document content, supporting both text and PDF files
+        """
+        if not extra_context_doc_path:
+            extra_context_doc_path = self.summary_doc_path
+        
+        if extra_context_doc_path.endswith('.pdf'):
+            content = self.read_pdf_file(extra_context_doc_path)
+        else:
+            content = self.read_file(extra_context_doc_path)
+        
+        return content
+
+    def read_pdf_file(self, path: str) -> str:
+        """
+        Read and return text content from a PDF file
+        """
+        try:
+            with open(path, 'rb') as file:
+                reader = PdfReader(file)
+                content = ""
+                for page in reader.pages:
+                    content += page.extract_text()
+                if not content:
+                    raise ValueError(f"PDF file {path} is empty or unreadable")
+                return content
+        except FileNotFoundError:
+            raise FileNotFoundError(f"PDF file not found at path: {path}")
+        except Exception as e:
+            raise IOError(f"Error reading PDF file at {path}: {str(e)}")
 
     def read_file(self, path: str) -> str:
         """
@@ -170,6 +203,7 @@ class FileManager:
         verified_paths = []
         
         for file_path in file_paths:
+            file_path = os.path.join(self.src_path, file_path)
             if os.path.exists(file_path):
                 verified_paths.append(file_path)
             else:
@@ -186,7 +220,8 @@ class FileManager:
                         break
                         
                 # If file wasn't found, it will be skipped
-        
+        # Filter out duplicates
+        verified_paths = list(dict.fromkeys(verified_paths))
         return verified_paths
 
 #Tests...

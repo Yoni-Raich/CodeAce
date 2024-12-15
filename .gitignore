@@ -2,3 +2,10 @@ venv/
 .env
 managers/__pycache__/
 .cursorignore
+/streamlit_gui/__pycache__
+/src/codeace.egg-info
+/src/codeace/__pycache__
+/src/codeace/agents/CodeAce
+/.vscode
+/src/codeace/agents/__pycache__
+/src/codeace/__pycache__

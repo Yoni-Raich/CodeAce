@@ -6,5 +6,4 @@ python_dotenv
 langchain_anthropic
 langchain_google_genai
 langchain_ollama
-langchain_openai
-PyPDF2
+tiktoken

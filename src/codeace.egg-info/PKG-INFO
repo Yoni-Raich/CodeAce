@@ -1,0 +1,25 @@
+Metadata-Version: 2.1
+Name: codeace
+Version: 0.1.0
+Summary: A tool for code analysis and documentation using LLMs
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: langchain_core
+Requires-Dist: langchain
+Requires-Dist: pydantic
+Requires-Dist: openai
+Requires-Dist: python_dotenv
+Requires-Dist: langchain_anthropic
+Requires-Dist: langchain_google_genai
+Requires-Dist: langchain_ollama
+Requires-Dist: tiktoken
+
+# CodeAce
+
+A Python package for code analysis and documentation using LLMs.
+
+## Installation 

@@ -30,7 +30,7 @@ class TokenManager:
         
         encoding = tiktoken.encoding_for_model(self.llm.model_name)
         max_tokens = self.llm.max_tokens
-        return encoding, max_tokens
+        return encoding, 128000
         
        
 
@@ -92,7 +92,7 @@ class TokenManager:
         prompt_tokens = self.calculate_tokens(prompt)
         return prompt_tokens <= self.max_tokens
 
-    def get_possible_files_content(self, user_query: str, file_paths: list) -> Tuple[str, list]:
+    def get_possible_files_content(self, user_query: str, extra_context_doc: str, file_paths: list) -> Tuple[str, list]:
         """
         Select and concatenate file contents based on token constraints.
 
@@ -104,7 +104,10 @@ class TokenManager:
             Tuple[str, list]: Concatenated content of selected files and remaining file paths
         """
         user_query_tokens = self.calculate_tokens(f"{user_query}")
-        remaining_tokens = self.max_tokens - user_query_tokens
+        extra_context_tokens = self.calculate_tokens(extra_context_doc)
+        remaining_tokens = self.max_tokens - (user_query_tokens + extra_context_tokens)
+        if remaining_tokens <= 0:
+            raise ValueError("User query and extra context exceed token limit")
 
         added_tokens = 0
         selected_content = []
@@ -126,7 +129,8 @@ class TokenManager:
                 print(f"Error reading file {file_path}: {str(e)}")
                 remaining_files.pop(0)
                 continue
-                
+        if not selected_content:
+            raise ValueError("No files selected due to token constraints")
         return '\n'.join(selected_content), remaining_files
 
 
